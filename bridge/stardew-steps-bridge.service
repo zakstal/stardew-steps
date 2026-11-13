@@ -1,0 +1,11 @@
+[Unit]
+Description=Stardew Steps bridge (phone steps over Bluetooth -> Stardew mod)
+
+[Service]
+WorkingDirectory=%h/stardew-steps/bridge
+ExecStart=/usr/bin/python3 -m stardew_steps_bridge
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
