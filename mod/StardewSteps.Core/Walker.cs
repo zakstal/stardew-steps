@@ -6,16 +6,20 @@ public sealed class Walker
     private const int MaxTicks = 240; // safety net: never walk longer than ~4s for one step
     private readonly IFarmerDriver _farmer;
     private readonly int _blockedTicks;
+    private readonly Func<Direction?>? _next;
     private Direction _dir;
     private (float x, float y) _target;
     private (float x, float y) _lastPos;
     private int _stillTicks;
     private int _ticks;
 
-    public Walker(IFarmerDriver farmer, int blockedTicks = 10)
+    /// <param name="next">Asked on arrival for the next step's direction; if it gives one,
+    /// the walk continues without halting so the walking animation doesn't stutter.</param>
+    public Walker(IFarmerDriver farmer, int blockedTicks = 10, Func<Direction?>? next = null)
     {
         _farmer = farmer;
         _blockedTicks = blockedTicks;
+        _next = next;
     }
 
     public bool Busy { get; private set; }
@@ -39,8 +43,13 @@ public sealed class Walker
 
         if (Reached(pos))
         {
-            _farmer.Stop();
             _farmer.Snap(_target.x, _target.y);
+            if (_next?.Invoke() is { } nextDir)
+            {
+                Start(nextDir);
+                return;
+            }
+            _farmer.Stop();
             Busy = false;
             return;
         }

@@ -25,7 +25,7 @@ public sealed class ModEntry : Mod
     {
         _config = helper.ReadConfig<ModConfig>();
         _queue = new StepQueue(_config.QueueCapacity, TimeSpan.FromSeconds(_config.MaxStepAgeSeconds));
-        _walker = new Walker(new FarmerDriver());
+        _walker = new Walker(new FarmerDriver(), next: NextStepDirection);
 
         _server = new StepServer(IPAddress.Loopback, _config.Port, () => _queue.Enqueue(DateTime.UtcNow), msg => Monitor.Log(msg, LogLevel.Info));
         try { _server.Start(); }
@@ -33,7 +33,7 @@ public sealed class ModEntry : Mod
 
         helper.Events.Input.ButtonPressed += OnButtonPressed;
         helper.Events.Input.ButtonReleased += OnButtonReleased;
-        helper.Events.GameLoop.UpdateTicking += (_, _) => { if (Context.IsWorldReady) SuppressHeldMoveButtons(); };
+        helper.Events.GameLoop.UpdateTicking += (_, _) => { if (ShouldSuppress()) SuppressHeldMoveButtons(); };
         helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
         helper.Events.GameLoop.SaveLoaded += (_, _) => ResetState();
         helper.Events.GameLoop.ReturnedToTitle += (_, _) => ResetState();
@@ -48,15 +48,9 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady) return;
         var dir = KeyboardDirection(e.Button);
-        if (dir is not null)
-        {
-            _tracker.Pressed(dir.Value);
+        if (dir is not null) _tracker.Pressed(dir.Value);
+        if (ShouldSuppress() && (dir is not null || Array.IndexOf(GamepadMoveButtons, e.Button) >= 0))
             Helper.Input.Suppress(e.Button);
-        }
-        else if (Array.IndexOf(GamepadMoveButtons, e.Button) >= 0 && Context.IsPlayerFree)
-        {
-            Helper.Input.Suppress(e.Button);
-        }
     }
 
     private void OnButtonReleased(object? sender, ButtonReleasedEventArgs e)
@@ -83,9 +77,40 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        if (_queue.TryDequeueFresh(DateTime.UtcNow) && _tracker.Current is { } dir)
+        if (NextStepDirection() is { } dir)
             _walker.Start(dir);
     }
+
+    /// <summary>Takes the next fresh step, if any, and returns the held direction for it (null = no step, or step dropped).</summary>
+    private Direction? NextStepDirection()
+    {
+        if (!_queue.TryDequeueFresh(DateTime.UtcNow)) return null;
+        _tracker.Prune(IsDirectionDown);
+        return _tracker.Current;
+    }
+
+#if DEBUG
+    /// <summary>Set by the self-test, which feeds directions without real key presses.</summary>
+    internal static bool AssumeKeysDown;
+#endif
+
+    private bool IsDirectionDown(Direction d)
+    {
+#if DEBUG
+        if (AssumeKeysDown) return true;
+#endif
+        var buttons = d switch
+        {
+            Direction.Up => Game1.options.moveUpButton,
+            Direction.Down => Game1.options.moveDownButton,
+            Direction.Left => Game1.options.moveLeftButton,
+            _ => Game1.options.moveRightButton,
+        };
+        return buttons.Any(b => Helper.Input.IsDown(b.ToSButton()));
+    }
+
+    private static bool ShouldSuppress() =>
+        Context.IsWorldReady && InputPolicy.SuppressMoveInput(Context.IsPlayerFree, Game1.currentMinigame != null);
 
     /// <summary>Keep the game from seeing held movement keys/sticks, so it never walks on its own.</summary>
     private void SuppressHeldMoveButtons()

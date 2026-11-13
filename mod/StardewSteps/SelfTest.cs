@@ -31,6 +31,7 @@ internal sealed class SelfTest
     {
         var save = Environment.GetEnvironmentVariable("STARDEW_STEPS_SELFTEST");
         if (string.IsNullOrEmpty(save)) return;
+        ModEntry.AssumeKeysDown = true;
         var test = new SelfTest(log, q, t, w, save);
         helper.Events.GameLoop.UpdateTicked += test.OnTick;
     }

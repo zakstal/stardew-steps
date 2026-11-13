@@ -16,4 +16,7 @@ public sealed class DirectionTracker
     public void Released(Direction d) => _held.Remove(d);
 
     public void Reset() => _held.Clear();
+
+    /// <summary>Forget keys that are no longer down (e.g. released while the window was unfocused).</summary>
+    public void Prune(Func<Direction, bool> isDown) => _held.RemoveAll(d => !isDown(d));
 }
