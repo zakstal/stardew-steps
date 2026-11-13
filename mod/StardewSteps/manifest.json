@@ -1,0 +1,10 @@
+{
+  "Name": "Stardew Steps",
+  "Author": "Zak",
+  "Version": "0.1.0",
+  "Description": "Each real-life step from your phone walks the farmer one tile in the direction you're holding.",
+  "UniqueID": "zak.StardewSteps",
+  "EntryDll": "StardewSteps.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": []
+}

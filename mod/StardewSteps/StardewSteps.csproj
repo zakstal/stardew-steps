@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>StardewSteps</AssemblyName>
+    <RootNamespace>StardewSteps</RootNamespace>
+    <Version>0.1.0</Version>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableHarmony>false</EnableHarmony>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\StardewSteps.Core\StardewSteps.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.4.0" />
+  </ItemGroup>
+
+</Project>

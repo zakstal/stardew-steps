@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StardewSteps.Core", "Starde
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StardewSteps.Core.Tests", "StardewSteps.Core.Tests\StardewSteps.Core.Tests.csproj", "{B49C91CC-F442-4A06-9E78-90A88EA5C19B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StardewSteps", "StardewSteps\StardewSteps.csproj", "{D7C643B0-72F3-40B2-B1DB-0C9E23397B07}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{B49C91CC-F442-4A06-9E78-90A88EA5C19B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B49C91CC-F442-4A06-9E78-90A88EA5C19B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B49C91CC-F442-4A06-9E78-90A88EA5C19B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D7C643B0-72F3-40B2-B1DB-0C9E23397B07}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7C643B0-72F3-40B2-B1DB-0C9E23397B07}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7C643B0-72F3-40B2-B1DB-0C9E23397B07}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7C643B0-72F3-40B2-B1DB-0C9E23397B07}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
