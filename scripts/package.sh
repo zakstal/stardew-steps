@@ -17,6 +17,7 @@ cp "mod/StardewSteps/bin/Release/net6.0/StardewSteps 0.1.0.zip" dist/StardewStep
 mkdir -p dist/stardew-steps-bridge
 cp -R bridge/stardew_steps_bridge bridge/stardew-steps-bridge.service dist/stardew-steps-bridge/
 find dist/stardew-steps-bridge -name __pycache__ -prune -exec rm -rf {} +
+(cd dist && zip -qr stardew-steps-bridge.zip stardew-steps-bridge)
 
 # 3. Phone app
 (cd android && ./gradlew -q assembleDebug)
