@@ -60,6 +60,7 @@ When you first open it, allow **Physical activity**, **Nearby devices** (Bluetoo
    systemctl --user daemon-reload && systemctl --user enable --now stardew-steps-bridge
    journalctl --user -u stardew-steps-bridge -f    # watch its log
    ```
+   If Bluetooth restarts on Fedora, the bridge exits on purpose so systemd can restart it. If you run it in a terminal, start it again.
 2. Launch Stardew through Steam, with SMAPI as usual, and load your save. The SMAPI console shows `[Stardew Steps] Listening on 127.0.0.1:47821`, then `Bridge connected` once you take your first step.
 3. On the phone, tap **Choose computer**, pick the Fedora machine, then tap **Connect**. The status should read "Connected to …".
 4. Hold a direction key (WASD or arrows) and walk.
@@ -69,7 +70,7 @@ When you first open it, allow **Physical activity**, **Nearby devices** (Bluetoo
 - Each step walks the farmer one tile in the direction of the key you're holding. If you hold two keys, the one you pressed last wins.
 - Steps taken while no key is held are thrown away.
 - Up to 5 steps can wait in line. A step that's been waiting more than 2 seconds is dropped, so a laggy connection never sends the farmer off on a run after you've stopped.
-- Steps don't count while a menu, dialogue or cutscene is open.
+- Steps don't count while a menu, dialogue or cutscene is open. Menus and arcade games keep normal keyboard and controller movement.
 - A controller can't move the farmer on its own either.
 - Settings live in `Mods/StardewSteps/config.json` (created on first run): `Port`, `QueueCapacity`, `MaxStepAgeSeconds`.
 
@@ -93,12 +94,13 @@ Things that could only be checked on the real setup. Each line says what to expe
 5. **Walls.** Hold a direction into a fence and press Enter. The farmer doesn't move, and the next step works normally.
 6. **Menus.** Open the inventory and press Enter a few times, then close it. The farmer doesn't move afterwards.
 7. **Everything else works.** Tools, clicking, talking to villagers and menus all behave normally.
-8. **Controller.** If you have one plugged in, the stick doesn't move the farmer.
-9. **Phone connects.** Stop `--fake`, start the normal bridge and connect from the phone. The bridge logs `phone connected`.
-10. **Real walking.** Hold Right and take 10 steps. The farmer moves about 10 tiles.
-11. **Screen off.** Lock the phone and walk while holding a key. The farmer still moves.
-12. **Bluetooth drop.** Turn the phone's Bluetooth off, then on again. The app reconnects within about 10 seconds.
-13. **Bridge restart.** Stop the bridge for about 40 seconds, then start it again. The phone reconnects by itself.
+8. **Controller.** If you have one plugged in, the stick doesn't move the farmer, but it still moves around inside menus such as the inventory and shops.
+9. **Arcade.** In the Saloon, Journey of the Prairie King plays normally with the keyboard.
+10. **Phone connects.** Stop `--fake`, start the normal bridge and connect from the phone. The bridge logs `phone connected`.
+11. **Real walking.** Hold Right and take 10 steps. The farmer moves about 10 tiles.
+12. **Screen off.** Lock the phone and walk while holding a key. The farmer still moves.
+13. **Bluetooth drop.** Turn the phone's Bluetooth off, then on again. The app reconnects within about 10 seconds.
+14. **Bridge restart.** Stop the bridge for about 40 seconds, then start it again. The phone reconnects by itself.
 
 ## Troubleshooting
 
