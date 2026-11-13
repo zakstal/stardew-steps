@@ -19,6 +19,7 @@ import android.os.IBinder
 import android.os.PowerManager
 import java.io.IOException
 import java.util.concurrent.Executors
+import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.TimeUnit
 
 /**
@@ -33,8 +34,7 @@ class StepService : Service(), SensorEventListener {
     }
 
     private val io = Executors.newSingleThreadScheduledExecutor()
-    @Volatile private var link: BtLink? = null
-    @Volatile private var stopping = false
+    private val links = ConnectGuard<BtLink>()
     private var address: String? = null
     private var backoffMs = 1_000L
     private var wakeLock: PowerManager.WakeLock? = null
@@ -51,7 +51,6 @@ class StepService : Service(), SensorEventListener {
 
     private fun start() {
         StepState.running = true
-        stopping = false
         val sm = getSystemService(SensorManager::class.java)
         val sensor = sm.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR, true)
             ?: sm.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR)
@@ -70,7 +69,7 @@ class StepService : Service(), SensorEventListener {
     /** Runs on the io thread. */
     @SuppressLint("MissingPermission")
     private fun connectLoop() {
-        if (stopping || link != null) return
+        if (links.stopped || links.current != null) return
         val adapter = getSystemService(BluetoothManager::class.java).adapter
         val device = adapter?.getRemoteDevice(address)
         if (adapter == null || !adapter.isEnabled || device == null) {
@@ -79,32 +78,38 @@ class StepService : Service(), SensorEventListener {
         }
         StepState.status = "Connecting to ${device.name ?: address}…"
         val l = BtLink(device)
+        links.connecting(l)
         try {
             l.connect()
-            link = l
+            if (!links.adopt(l)) return // stopped while connecting
             backoffMs = 1_000L
             StepState.status = "Connected to ${device.name ?: address}"
         } catch (e: IOException) {
-            l.close()
+            links.drop(l)
+            if (links.stopped) return
             StepState.status = "Can't reach ${device.name ?: address} — retrying"
             retryLater()
         }
     }
 
     private fun retryLater() {
-        if (stopping) return
-        io.schedule({ connectLoop() }, backoffMs, TimeUnit.MILLISECONDS)
+        if (links.stopped || io.isShutdown) return
+        try {
+            io.schedule({ connectLoop() }, backoffMs, TimeUnit.MILLISECONDS)
+        } catch (_: RejectedExecutionException) {
+            return
+        }
         backoffMs = (backoffMs * 2).coerceAtMost(10_000L)
     }
 
     private fun send(bytes: ByteArray, isStep: Boolean) {
-        val l = link ?: return
+        val l = links.current ?: return
         try {
             l.send(bytes)
             if (isStep) StepState.stepsSent++
         } catch (e: IOException) {
-            l.close()
-            link = null
+            links.drop(l)
+            if (links.stopped) return
             StepState.status = "Connection lost — reconnecting"
             connectLoop()
         }
@@ -113,19 +118,17 @@ class StepService : Service(), SensorEventListener {
     override fun onSensorChanged(event: SensorEvent) {
         if (event.sensor.type != Sensor.TYPE_STEP_DETECTOR) return
         StepState.stepsDetected++
-        io.execute { send(StepProtocol.STEP, isStep = true) }
+        try { io.execute { send(StepProtocol.STEP, isStep = true) } } catch (_: RejectedExecutionException) {}
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
     override fun onDestroy() {
-        stopping = true
+        links.stop() // closes a link that's mid-connect too
         StepState.running = false
         StepState.status = "Stopped"
         getSystemService(SensorManager::class.java).unregisterListener(this)
         io.shutdownNow()
-        link?.close()
-        link = null
         wakeLock?.let { if (it.isHeld) it.release() }
         super.onDestroy()
     }

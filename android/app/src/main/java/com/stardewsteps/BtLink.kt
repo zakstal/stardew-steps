@@ -3,10 +3,11 @@ package com.stardewsteps
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
+import java.io.Closeable
 import java.io.IOException
 
 /** One RFCOMM connection to the bridge. Not reusable: make a new one to reconnect. */
-class BtLink(private val device: BluetoothDevice) {
+class BtLink(private val device: BluetoothDevice) : Closeable {
     private var socket: BluetoothSocket? = null
 
     @SuppressLint("MissingPermission") // checked by MainActivity before the service starts
@@ -25,7 +26,7 @@ class BtLink(private val device: BluetoothDevice) {
         out.flush()
     }
 
-    fun close() {
+    override fun close() {
         try { socket?.close() } catch (_: IOException) {}
         socket = null
     }
